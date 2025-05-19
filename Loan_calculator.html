@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loan Calculator</title>
+  <style>
+    :root {
+      --light-bg: #f0f8ff;
+      --light-text: #0a2540;
+      --light-table-header: #bcdffb;
+      --light-border: #6699cc;
+
+      --dark-bg: #121822;
+      --dark-text: #d0d4e7;
+      --dark-table-header: #36475a;
+      --dark-border: #5472a7;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg);
+      color: var(--light-text);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 10px 50px;
+    }
+
+    body.dark {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    h1 {
+      margin-bottom: 0.3em;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 900px;
+      background: inherit;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgb(0 0 0 / 0.1);
+      padding: 20px 25px 30px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.3em;
+      font-weight: 600;
+    }
+
+    select, input[type=number] {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1.5px solid var(--light-border);
+      outline-offset: 2px;
+      margin-bottom: 1.2em;
+      transition: border-color 0.25s ease;
+      background-color: #ffffff;
+      color: #111;
+    }
+
+    body.dark select, body.dark input[type=number] {
+      background-color: #2a3246;
+      color: var(--dark-text);
+      border: 1.5px solid var(--dark-border);
+    }
+
+    select:focus, input[type=number]:focus {
+      border-color: #2a82ff;
+      box-shadow: 0 0 6px #64a0ff88;
+    }
+
+    button {
+      display: inline-block;
+      background: #1663d9;
+      color: white;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 32px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover, button:focus {
+      background: #145bb5;
+      outline: none;
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    body.dark footer {
+      color: #8a8f9b;
+    }
+
+    /* Table for EMI details */
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 14px rgb(0 0 0 / 0.1);
+    }
+
+    thead {
+      background-color: var(--light-table-header);
+    }
+
+    body.dark thead {
+      background-color: var(--dark-table-header);
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: right;
+      border-bottom: 1px solid var(--light-border);
+    }
+
+    body.dark th, body.dark td {
+      border-bottom: 1px solid var(--dark-border);
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    thead th {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    tbody tr:hover {
+      background-color: #d9e9ff88;
+    }
+
+    body.dark tbody tr:hover {
+      background-color: #3e4a66;
+    }
+
+    /* Theme selector styling */
+    .theme-selector {
+      margin-bottom: 1.5em;
+      font-weight: 600;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      th, td {
+        padding: 10px 8px;
+        font-size: 0.9rem;
+      }
+
+      button {
+        padding: 12px 20px;
+        font-size: 1rem;
+      }
+
+      main {
+        padding: 15px 15px 25px;
+      }
+    }
+
+    /* Screen reader only text */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px; 
+      padding: 0; margin: -1px; 
+      overflow: hidden; 
+      clip: rect(0,0,0,0); 
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Loan Calculator</h1>
+  <main>
+    <div class="theme-selector">
+      <label for="theme-select">Select Theme:</label>
+      <select id="theme-select" aria-label="Select Theme">
+        <option value="light" selected>Light Blueish</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+
+    <form id="loan-form" aria-label="Loan Calculator Form" novalidate>
+      <label for="loan-type">Loan Type</label>
+      <select id="loan-type" required aria-required="true" aria-describedby="loan-type-desc">
+        <option value="" disabled selected>Select loan type</option>
+        <option value="home">Home Loan</option>
+        <option value="car">Car Loan</option>
+        <option value="personal">Personal Loan</option>
+        <option value="education">Education Loan</option>
+        <option value="business">Business Loan</option>
+      </select>
+      <small id="loan-type-desc" class="sr-only">Choose the type of loan you want</small>
+
+      <label for="interest-type">Type of Interest</label>
+      <select id="interest-type" required aria-required="true" aria-describedby="interest-type-desc">
+        <option value="" disabled selected>Select interest type</option>
+        <option value="reducing">Simple (Reducing Balance)</option>
+        <option value="flat">Flat</option>
+      </select>
+      <small id="interest-type-desc" class="sr-only">Choose the type of interest calculation</small>
+
+      <label for="loan-amount">Loan Amount (₹)</label>
+      <input
+        type="number"
+        id="loan-amount"
+        min="1"
+        step="1"
+        required
+        aria-required="true"
+        placeholder="Enter loan amount"
+      />
+
+      <label for="loan-tenure">Loan Tenure (years)</label>
+      <input
+        type="number"
+        id="loan-tenure"
+        min="1"
+        step="1"
+        required
+        aria-required="true"
+        placeholder="Enter tenure in years"
+      />
+
+      <label for="interest-rate">Annual Interest Rate (%)</label>
+      <input
+        type="number"
+        id="interest-rate"
+        min="0.01"
+        step="0.01"
+        required
+        aria-required="true"
+        placeholder="Enter annual interest rate"
+      />
+
+      <label for="emi-frequency">EMI Frequency</label>
+      <select id="emi-frequency" required aria-required="true" aria-describedby="emi-frequency-desc">
+        <option value="" disabled selected>Select EMI frequency</option>
+        <option value="1">Monthly (Every 1 month)</option>
+        <option value="3">Quarterly (Every 3 months)</option>
+        <option value="6">Biannual (Every 6 months)</option>
+        <option value="12">Annual (Every 12 months)</option>
+      </select>
+      <small id="emi-frequency-desc" class="sr-only">Choose how often you want to pay EMI</small>
+
+      <button type="submit" aria-label="Generate EMI Schedule">Generate EMI Schedule</button>
+    </form>
+
+    <section id="emi-details" aria-live="polite" style="margin-top: 30px;"></section>
+  </main>
+
+  <footer>
+    &copy; 2024 Loan Calculator. Created for you with care.
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeSelect = document.getElementById('theme-select');
+      const body = document.body;
+      const loanForm = document.getElementById('loan-form');
+      const emiDetails = document.getElementById('emi-details');
+
+      function applyTheme(theme) {
+        if (theme === 'dark') {
+          body.classList.add('dark');
+        } else {
+          body.classList.remove('dark');
+        }
+      }
+
+      applyTheme(themeSelect.value);
+
+      themeSelect.addEventListener('change', (e) => {
+        applyTheme(e.target.value);
+      });
+
+      function calculateEMI(principal, periodicInterestRate, totalPayments) {
+        if (periodicInterestRate === 0) return principal / totalPayments;
+        const emi = (principal * periodicInterestRate * Math.pow(1 + periodicInterestRate, totalPayments)) /
+                    (Math.pow(1 + periodicInterestRate, totalPayments) - 1);
+        return emi;
+      }
+
+      // Helper: to get month name for a given payment number and frequency
+      function getMonthName(startMonth, monthsToAdd) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return monthNames[(startMonth + monthsToAdd) % 12];
+      }
+
+      loanForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        emiDetails.innerHTML = '';
+
+        const loanType = loanForm['loan-type'].value;
+        const interestType = loanForm['interest-type'].value;
+        const principalAmount = parseFloat(loanForm['loan-amount'].value);
+        const tenureYears = parseInt(loanForm['loan-tenure'].value, 10);
+        const annualInterestRate = parseFloat(loanForm['interest-rate'].value);
+        const emiFrequencyMonths = parseInt(loanForm['emi-frequency'].value, 10);
+
+        if (!loanType) {
+          alert('Please select a loan type.');
+          return;
+        }
+        if (!interestType) {
+          alert('Please select a type of interest.');
+          return;
+        }
+        if (isNaN(principalAmount) || principalAmount <= 0) {
+          alert('Please enter a valid loan amount.');
+          return;
+        }
+        if (isNaN(tenureYears) || tenureYears <= 0) {
+          alert('Please enter a valid loan tenure in years.');
+          return;
+        }
+        if (isNaN(annualInterestRate) || annualInterestRate < 0) {
+          alert('Please enter a valid annual interest rate.');
+          return;
+        }
+        if (isNaN(emiFrequencyMonths) || emiFrequencyMonths <= 0) {
+          alert('Please select a valid EMI frequency.');
+          return;
+        }
+
+        const totalMonths = tenureYears * 12;
+        const totalPayments = Math.ceil(totalMonths / emiFrequencyMonths);
+        const periodsPerYear = 12 / emiFrequencyMonths;
+        const periodicInterestRate = annualInterestRate / 100 / periodsPerYear;
+
+        let schedule = [];
+        let currentDate = new Date();
+        let startMonth = currentDate.getMonth(); // 0-11 Jan-Dec
+
+        if (interestType === 'reducing') {
+          const periodicEMI = calculateEMI(principalAmount, periodicInterestRate, totalPayments);
+          let balancePrincipal = principalAmount;
+
+          for (let paymentNumber = 1; paymentNumber <= totalPayments; paymentNumber++) {
+            const interestForPeriod = balancePrincipal * periodicInterestRate;
+            let principalPayment = periodicEMI - interestForPeriod;
+
+            balancePrincipal -= principalPayment;
+
+            // Prevent small negative due to rounding on last payment
+            if (paymentNumber === totalPayments && balancePrincipal < -1) {
+              principalPayment += balancePrincipal; // reduce principal payment
+              balancePrincipal = 0;
+            }
+            if (balancePrincipal < 0) balancePrincipal = 0;
+
+            const monthName = getMonthName(startMonth, (paymentNumber - 1) * emiFrequencyMonths);
+            schedule.push({
+              paymentNumber,
+              paymentAmount: periodicEMI,
+              principalPayment,
+              interestPayment: interestForPeriod,
+              remainingPrincipal: balancePrincipal,
+              monthName,
+            });
+          }
+
+          displaySchedule(loanType, interestType, principalAmount, tenureYears, annualInterestRate, emiFrequencyMonths, periodicEMI, schedule);
+        }
+        else if (interestType === 'flat') {
+          const totalInterest = principalAmount * (annualInterestRate / 100) * tenureYears;
+          const totalRepayment = principalAmount + totalInterest;
+
+          const paymentAmount = totalRepayment / totalPayments;
+          const periodicInterestPayment = totalInterest / totalPayments;
+          const periodicPrincipalPayment = principalAmount / totalPayments;
+
+          let balancePrincipal = principalAmount;
+
+          for (let paymentNumber = 1; paymentNumber <= totalPayments; paymentNumber++) {
+            balancePrincipal -= periodicPrincipalPayment;
+            if (balancePrincipal < 0) balancePrincipal = 0;
+
+            const monthName = getMonthName(startMonth, (paymentNumber - 1) * emiFrequencyMonths);
+            schedule.push({
+              paymentNumber,
+              paymentAmount,
+              principalPayment: periodicPrincipalPayment,
+              interestPayment: periodicInterestPayment,
+              remainingPrincipal: balancePrincipal,
+              monthName,
+            });
+          }
+
+          displaySchedule(loanType, interestType, principalAmount, tenureYears, annualInterestRate, emiFrequencyMonths, paymentAmount, schedule);
+        }
+
+        function displaySchedule(loanType, interestType, principalAmount, tenureYears, annualInterestRate, emiFrequencyMonths, paymentAmount, schedule) {
+          const interestTypeDisplay = interestType === 'reducing' ? 'Simple (Reducing Balance)' : 'Flat';
+
+          let freqText = '';
+          switch(emiFrequencyMonths) {
+            case 1:
+              freqText = 'Monthly';
+              break;
+            case 3:
+              freqText = 'Quarterly';
+              break;
+            case 6:
+              freqText = 'Biannual';
+              break;
+            case 12:
+              freqText = 'Annual';
+              break;
+            default:
+              freqText = `Every ${emiFrequencyMonths} months`;
+          }
+
+          const summary = document.createElement('div');
+          summary.style.marginBottom = '15px';
+          summary.innerHTML = `
+            <strong>Loan Type:</strong> ${loanType.charAt(0).toUpperCase() + loanType.slice(1)}<br>
+            <strong>Type of Interest:</strong> ${interestTypeDisplay}<br>
+            <strong>Loan Amount:</strong> ₹${principalAmount.toLocaleString()}<br>
+            <strong>Loan Tenure:</strong> ${tenureYears} year(s) (${tenureYears*12} months)<br>
+            <strong>Annual Interest Rate:</strong> ${annualInterestRate.toFixed(2)}%<br>
+            <strong>EMI Frequency:</strong> ${freqText}<br>
+            <strong>Number of Payments:</strong> ${schedule.length}<br>
+            <strong>EMI Amount per payment:</strong> ₹${paymentAmount.toFixed(2)}
+          `;
+
+          const table = document.createElement('table');
+          table.setAttribute('aria-label', 'EMI Payment Schedule Table');
+
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          ['Payment No.', 'Payment Month', 'Payment Amount (₹)', 'Principal Paid (₹)', 'Interest Paid (₹)', 'Remaining Principal (₹)'].forEach(heading => {
+            const th = document.createElement('th');
+            th.textContent = heading;
+            th.setAttribute('scope', 'col');
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+
+          schedule.forEach(row => {
+            const tr = document.createElement('tr');
+
+            const paymentNumTd = document.createElement('td');
+            paymentNumTd.textContent = row.paymentNumber;
+            tr.appendChild(paymentNumTd);
+
+            const monthTd = document.createElement('td');
+            monthTd.textContent = row.monthName;
+            tr.appendChild(monthTd);
+
+            const paymentAmtTd = document.createElement('td');
+            paymentAmtTd.textContent = row.paymentAmount.toFixed(2);
+            tr.appendChild(paymentAmtTd);
+
+            const principalTd = document.createElement('td');
+            principalTd.textContent = row.principalPayment.toFixed(2);
+            tr.appendChild(principalTd);
+
+            const interestTd = document.createElement('td');
+            interestTd.textContent = row.interestPayment.toFixed(2);
+            tr.appendChild(interestTd);
+
+            const remainingTd = document.createElement('td');
+            remainingTd.textContent = row.remainingPrincipal.toFixed(2);
+            tr.appendChild(remainingTd);
+
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+
+          emiDetails.appendChild(summary);
+          emiDetails.appendChild(table);
+
+          table.scrollIntoView({behavior: 'smooth'});
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
